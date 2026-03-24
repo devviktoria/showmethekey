@@ -7,7 +7,11 @@
 
 #include "smtk-keys-win.h"
 #include "smtk-keys-area.h"
+#include "smtk-mouse-area.h"
+#include "smtk-tablet-area.h"
+#include "smtk-controller-widget.h"
 #include "smtk-keys-emitter.h"
+#include "smtk-controller-emitter.h"
 
 struct _SmtkKeysWin {
 	AdwApplicationWindow parent_instance;
@@ -15,8 +19,12 @@ struct _SmtkKeysWin {
 	GtkWidget *box;
 	GtkWidget *header_bar;
 	GtkWidget *handle;
+	GtkWidget *controller_widget;
+	GtkWidget *tablet_area;
+	GtkWidget *mouse_area;
 	GtkWidget *area;
 	SmtkKeysEmitter *emitter;
+	SmtkControllerEmitter *controller_emitter;
 	bool clickable;
 	bool paused;
 	bool show_shift;
@@ -119,6 +127,48 @@ static void on_key(SmtkKeysWin *this, char key[])
 	// See <http://garfileo.is-programmer.com/2011/3/25/gobject-signal-extra-1.25576.html>.
 	// void (*callback)(void *instance, const gchar *arg1, void *data)
 	smtk_keys_area_add_key(SMTK_KEYS_AREA(this->area), key);
+}
+
+void on_mouse(SmtkKeysWin *this, SmtkMouseButton button, gboolean pressed)
+{
+	if (this->paused)
+		return;
+	smtk_mouse_area_handle_event(
+		SMTK_MOUSE_AREA(this->mouse_area), button, pressed
+	);
+}
+
+void on_tablet(
+	SmtkKeysWin *this,
+	const double pressure,
+	const double tilt_x,
+	const double tilt_y
+)
+{
+	if (this->paused)
+		return;
+	smtk_tablet_area_handle_event(
+		SMTK_TABLET_AREA(this->tablet_area), pressure, tilt_x, tilt_y
+	);
+}
+
+void on_controller(
+	SmtkKeysWin *this,
+	const SmtkControllerEventType event_type,
+	const guint8 number,
+	const double value,
+	const gboolean pressed
+)
+{
+	if (this->paused)
+		return;
+	smtk_controller_widget_handle_event(
+		SMTK_CONTROLLER_WIDGET(this->controller_widget),
+		event_type,
+		number,
+		value,
+		pressed
+	);
 }
 
 #ifdef GDK_WINDOWING_X11
@@ -309,7 +359,11 @@ static void constructed(GObject *o)
 		ADW_HEADER_BAR(this->header_bar), this->handle
 	);
 	gtk_box_append(GTK_BOX(this->box), this->header_bar);
+
 	gtk_widget_set_visible(this->handle, this->clickable);
+
+	GtkWidget *content_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	gtk_box_append(GTK_BOX(this->box), content_box);
 
 	this->emitter = smtk_keys_emitter_new();
 	g_signal_connect_swapped(
@@ -319,11 +373,39 @@ static void constructed(GObject *o)
 		this
 	);
 	g_signal_connect_swapped(this->emitter, "key", G_CALLBACK(on_key), this);
+	g_signal_connect_swapped(
+		this->emitter, "mouse", G_CALLBACK(on_mouse), this
+	);
+	g_signal_connect_swapped(
+		this->emitter, "tablet", G_CALLBACK(on_tablet), this
+	);
 
 	smtk_keys_emitter_start_async(this->emitter);
 
+	this->controller_emitter = smtk_controller_emitter_new();
+
+	g_signal_connect_swapped(
+		this->controller_emitter,
+		"controller",
+		G_CALLBACK(on_controller),
+		this
+	);
+
+	smtk_controller_emitter_start_async(this->controller_emitter);
+
+	this->controller_widget = smtk_controller_widget_new();
+	gtk_box_append(GTK_BOX(content_box), this->controller_widget);
+	gtk_widget_add_css_class(this->controller_widget, "controller");
+	//gtk_widget_set_size_request(this->controller_widget, 400, 100);
+
+	this->tablet_area = smtk_tablet_area_new();
+	gtk_box_append(GTK_BOX(content_box), this->tablet_area);
+
+	this->mouse_area = smtk_mouse_area_new();
+	gtk_box_append(GTK_BOX(content_box), this->mouse_area);
+
 	this->area = smtk_keys_area_new();
-	gtk_box_append(GTK_BOX(this->box), this->area);
+	gtk_box_append(GTK_BOX(content_box), this->area);
 
 	this->settings = g_settings_new("one.alynx.showmethekey");
 	// Sync settings with initial state.
@@ -366,6 +448,12 @@ static void dispose(GObject *o)
 		smtk_keys_emitter_stop_async(this->emitter);
 		g_object_unref(this->emitter);
 		this->emitter = NULL;
+	}
+
+	if (this->controller_emitter != NULL) {
+		smtk_controller_emitter_stop_async(this->controller_emitter);
+		g_object_unref(this->controller_emitter);
+		this->controller_emitter = NULL;
 	}
 
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->dispose(o);

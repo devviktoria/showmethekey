@@ -1,12 +1,14 @@
 #include <gio/gio.h>
 #include <json-glib/json-glib.h>
 #include <grp.h>
+#include <stdio.h>
 
 #include "config.h"
 #include "smtk-enum-types.h"
 #include "smtk-keys-emitter.h"
 #include "smtk-keys-mapper.h"
 #include "smtk-event.h"
+#include "smtk-types.h"
 
 #define MAX_KEYS 30
 
@@ -30,7 +32,7 @@ struct _SmtkKeysEmitter {
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
-enum { SIG_KEY, SIG_ERROR_CLI_EXIT, N_SIGNALS };
+enum { SIG_KEY, SIG_MOUSE, SIG_TABLET, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
 static unsigned int sigs[N_SIGNALS] = { 0 };
 
@@ -111,6 +113,19 @@ struct key_idle_data {
 	char *key;
 };
 
+struct mouse_idle_data {
+	SmtkKeysEmitter *emitter;
+	SmtkMouseButton button;
+	gboolean pressed;
+};
+
+struct tablet_idle_data {
+	SmtkKeysEmitter *emitter;
+	double pressure;
+	double tilt_x;
+	double tilt_y;
+};
+
 // true and false are C99 _Bool, but GLib expects gboolean, which is C99 int.
 static int key_idle(void *data)
 {
@@ -139,6 +154,58 @@ static void trigger_key_idle(SmtkKeysEmitter *this, const char key[])
 	key_idle_data->emitter = g_object_ref(this);
 	key_idle_data->key = g_strdup(key);
 	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, key_idle, key_idle_data, NULL);
+}
+
+static int mouse_idle(void *data)
+{
+	g_autofree struct mouse_idle_data *mouse_idle_data = data;
+	g_autoptr(SmtkKeysEmitter) this = mouse_idle_data->emitter;
+	SmtkMouseButton button = mouse_idle_data->button;
+	gboolean pressed = mouse_idle_data->pressed;
+	g_signal_emit_by_name(this, "mouse", button, pressed);
+
+	return 0;
+}
+
+static void trigger_mouse_idle(
+	SmtkKeysEmitter *this,
+	SmtkMouseButton button,
+	gboolean pressed
+)
+{
+	struct mouse_idle_data *data = g_malloc0(sizeof(*data));
+	data->emitter = g_object_ref(this);
+	data->button = button;
+	data->pressed = pressed;
+	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, mouse_idle, data, NULL);
+}
+
+static int tablet_idle(void *data)
+{
+
+	g_autofree struct tablet_idle_data *tablet_idle_data = data;
+	g_autoptr(SmtkKeysEmitter) this = tablet_idle_data->emitter;
+	double pressure = tablet_idle_data->pressure;
+	double tilt_x = tablet_idle_data->tilt_x;
+	double tilt_y = tablet_idle_data->tilt_y;
+	g_signal_emit_by_name(this, "tablet", pressure, tilt_x, tilt_y);
+
+	return 0;
+}
+
+static void trigger_tablet_idle(
+	SmtkKeysEmitter *this,
+	double pressure,
+	double tilt_x,
+	double tilt_y
+)
+{
+	struct tablet_idle_data *data = g_malloc0(sizeof(*data));
+	data->emitter = g_object_ref(this);
+	data->pressure = pressure;
+	data->tilt_x = tilt_x;
+	data->tilt_y = tilt_y;
+	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, tablet_idle, data, NULL);
 }
 
 static bool is_modifier(const char *key_name, SmtkModifier modifier)
@@ -207,6 +274,17 @@ static void trigger_paused_idle(SmtkKeysEmitter *this)
 	);
 }
 
+static SmtkMouseButton mouse_button_from_name(const char *name)
+{
+	if (g_strcmp0(name, "BTN_LEFT") == 0)
+		return SMTK_MOUSE_BUTTON_LEFT;
+	if (g_strcmp0(name, "BTN_RIGHT") == 0)
+		return SMTK_MOUSE_BUTTON_RIGHT;
+	if (g_strcmp0(name, "BTN_MIDDLE") == 0)
+		return SMTK_MOUSE_BUTTON_MIDDLE;
+	return SMTK_MOUSE_BUTTON_UNKNOWN;
+}
+
 static void *poll_cli(void *data)
 {
 	SmtkKeysEmitter *this = data;
@@ -264,31 +342,60 @@ static void *poll_cli(void *data)
 			if (this->paused_pressed)
 				this->paused_pressed = false;
 		}
-		g_autofree char *key = NULL;
-		// Always get key with SmtkKeysMapper, it will update XKB state
-		// to keep sync with actual keyboard.
-		switch (this->mode) {
-		case SMTK_KEY_MODE_COMPOSED:
-			key = smtk_keys_mapper_get_composed(this->mapper, event);
-			break;
-		case SMTK_KEY_MODE_RAW:
-			key = smtk_keys_mapper_get_raw(this->mapper, event);
-			break;
-		case SMTK_KEY_MODE_COMPACT:
-			key = smtk_keys_mapper_get_compact(this->mapper, event);
-			break;
-		default:
-			// Should never be here.
-			g_warn_if_reached();
+
+		switch (type) {
+		case SMTK_EVENT_TYPE_KEYBOARD_KEY: {
+			g_autofree char *key = NULL;
+			switch (this->mode) {
+			case SMTK_KEY_MODE_COMPOSED:
+				key = smtk_keys_mapper_get_composed(
+					this->mapper, event
+				);
+				break;
+			case SMTK_KEY_MODE_RAW:
+				key = smtk_keys_mapper_get_raw(
+					this->mapper, event
+				);
+				break;
+			case SMTK_KEY_MODE_COMPACT:
+				key = smtk_keys_mapper_get_compact(
+					this->mapper, event
+				);
+				break;
+			default:
+				g_warn_if_reached();
+				break;
+			}
+			if (key != NULL && state == SMTK_EVENT_STATE_PRESSED &&
+			    this->show_keyboard)
+				trigger_key_idle(this, key);
 			break;
 		}
-		if (key != NULL) {
-			if (state == SMTK_EVENT_STATE_PRESSED &&
-			    ((this->show_mouse &&
-			      type == SMTK_EVENT_TYPE_POINTER_BUTTON) ||
-			     (this->show_keyboard &&
-			      type == SMTK_EVENT_TYPE_KEYBOARD_KEY)))
-				trigger_key_idle(this, key);
+		case SMTK_EVENT_TYPE_POINTER_BUTTON: {
+			if (!this->show_mouse)
+				break;
+			SmtkMouseButton button =
+				mouse_button_from_name(key_name);
+			if (button != SMTK_MOUSE_BUTTON_UNKNOWN)
+				trigger_mouse_idle(
+					this,
+					button,
+					state == SMTK_EVENT_STATE_PRESSED
+				);
+			break;
+		}
+		case SMTK_EVENT_TYPE_TABLET_AXIS: {
+			trigger_tablet_idle(
+				this,
+				event->pressure,
+				event->tilt_x,
+				event->tilt_y
+			);
+
+			break;
+		}
+		default:
+			break;
 		}
 	}
 	return NULL;
@@ -377,6 +484,33 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *klass)
 		G_TYPE_NONE,
 		1,
 		G_TYPE_STRING
+	);
+	sigs[SIG_MOUSE] = g_signal_new(
+		"mouse",
+		SMTK_TYPE_KEYS_EMITTER,
+		G_SIGNAL_RUN_LAST,
+		0,
+		NULL,
+		NULL,
+		NULL,
+		G_TYPE_NONE,
+		2,
+		G_TYPE_INT,
+		G_TYPE_BOOLEAN
+	);
+	sigs[SIG_TABLET] = g_signal_new(
+		"tablet",
+		SMTK_TYPE_KEYS_EMITTER,
+		G_SIGNAL_RUN_LAST,
+		0,
+		NULL,
+		NULL,
+		g_cclosure_marshal_generic,
+		G_TYPE_NONE,
+		3,
+		G_TYPE_DOUBLE,
+		G_TYPE_DOUBLE,
+		G_TYPE_DOUBLE
 	);
 	sigs[SIG_ERROR_CLI_EXIT] = g_signal_new(
 		"error-cli-exit",

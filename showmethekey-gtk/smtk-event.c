@@ -25,8 +25,27 @@ SmtkEvent *smtk_event_new(const char *source)
 		json_object_get_string_member(json_object, "event_name");
 	if (g_strcmp0(event_name, "POINTER_BUTTON") == 0)
 		this->type = SMTK_EVENT_TYPE_POINTER_BUTTON;
+	else if (g_strcmp0(event_name, "TABLET_AXIS") == 0)
+		this->type = SMTK_EVENT_TYPE_TABLET_AXIS;
 	else
 		this->type = SMTK_EVENT_TYPE_KEYBOARD_KEY;
+
+	if (this->type == SMTK_EVENT_TYPE_TABLET_AXIS) {
+		this->pressure =
+			json_object_get_double_member(json_object, "pressure");
+
+		this->tilt_x =
+			json_object_get_double_member(json_object, "tilt_x");
+
+		this->tilt_y =
+			json_object_get_double_member(json_object, "tilt_y");
+
+		this->time_stamp =
+			json_object_get_int_member(json_object, "time_stamp");
+
+		return this;
+	}
+
 	const char *event_state_name =
 		json_object_get_string_member(json_object, "state_name");
 	if (g_strcmp0(event_state_name, "PRESSED") == 0)

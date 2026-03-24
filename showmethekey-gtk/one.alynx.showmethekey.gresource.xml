@@ -4,6 +4,7 @@
     <file preprocess="xml-stripblanks">smtk-app-win.ui</file>
     <file preprocess="xml-stripblanks">smtk-app-win-menu.ui</file>
     <file preprocess="xml-stripblanks">smtk-usage-win.ui</file>
+    <file preprocess="xml-stripblanks">smtk-controller-widget.ui</file>
     <file>style.css</file>
   </gresource>
 </gresources>

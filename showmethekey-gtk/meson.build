@@ -2,12 +2,20 @@ gnome = import('gnome')
 
 gtk_sources = files(
   'main.c',
+  'smtk-types.c',
   'smtk-app.c',
   'smtk-app-win.c',
   'smtk-usage-win.c',
   'smtk-keys-win.c',
   'smtk-keys-area.c',
+  'smtk-button-area.c',
+  'smtk-mouse-area.c',
+  'smtk-sundial-area.c',
+  'smtk-pressure-area.c',
+  'smtk-tablet-area.c',
+  'smtk-controller-widget.c',
   'smtk-keys-emitter.c',
+  'smtk-controller-emitter.c',
   'smtk-keys-mapper.c',
   'smtk-keymap-list.c',
   'smtk-event.c'
@@ -15,11 +23,19 @@ gtk_sources = files(
 
 gtk_headers = files(
   'smtk-app.h',
+  'smtk-types.h',
   'smtk-app-win.h',
   'smtk-usage-win.h',
   'smtk-keys-win.h',
   'smtk-keys-area.h',
+  'smtk-button-area.h',
+  'smtk-mouse-area.h',
+  'smtk-sundial-area.h',
+  'smtk-pressure-area.h',
+  'smtk-tablet-area.h',
+  'smtk-controller-widget.h',
   'smtk-keys-emitter.h',
+  'smtk-controller-emitter.h',
   'smtk-keys-mapper.h',
   'smtk-keymap-list.h',
   'smtk-event.h'

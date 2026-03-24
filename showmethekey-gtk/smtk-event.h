@@ -8,7 +8,8 @@ G_BEGIN_DECLS
 typedef enum _SmtkEventType {
 	SMTK_EVENT_TYPE_UNKNOWN,
 	SMTK_EVENT_TYPE_KEYBOARD_KEY,
-	SMTK_EVENT_TYPE_POINTER_BUTTON
+	SMTK_EVENT_TYPE_POINTER_BUTTON,
+	SMTK_EVENT_TYPE_TABLET_AXIS
 } SmtkEventType;
 
 typedef enum _SmtkEventState {
@@ -23,6 +24,9 @@ typedef struct _SmtkEvent {
 	char *key_name;
 	unsigned int key_code;
 	unsigned int time_stamp;
+	double pressure;
+	double tilt_x;
+	double tilt_y;
 } SmtkEvent;
 
 #define SMTK_TYPE_EVENT smtk_event_get_type()

@@ -25,3 +25,13 @@ window.smtk-keys-win headerbar {
 window.smtk-keys-win headerbar windowhandle box windowtitle {
     color: rgba(255, 255, 255, 0.7);
 }
+
+.controller {
+  padding: 10px;
+  border: 2px solid #FFF;
+  border-radius: 12px;
+}
+
+.debug-red {
+  background: yellow;
+}

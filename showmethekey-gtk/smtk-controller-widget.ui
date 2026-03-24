@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <template class="SmtkControllerWidget" parent="GtkGrid">
+    <property name="column-spacing">5</property>
+    <property name="row-spacing">5</property>
+    <!--<property name="vexpand">True</property>
+    <property name="hexpand">True</property>-->
+    <!-- Triggers -->
+    <child>
+      <object class="SmtkPressureArea" id="left_trigger">
+        <layout>
+          <property name="column">0</property>
+          <property name="column-span">1</property>
+          <property name="row">0</property>
+          <property name="row-span">1</property>
+        </layout>
+      </object>
+    </child>
+
+    <child>
+      <object class="GtkBox">
+        <property name="spacing">5</property>
+        <child><object class="SmtkButtonArea" id="left_bumper"/></child>
+        <child><object class="SmtkButtonArea" id="middle_button_1"/></child>
+        <child><object class="SmtkButtonArea" id="middle_button_2"/></child>
+        <child><object class="SmtkButtonArea" id="middle_button_3"/></child>
+        <child><object class="SmtkButtonArea" id="right_bumper"/></child>
+
+        <layout>
+          <property name="column">1</property>
+          <property name="column-span">2</property>
+          <property name="row">0</property>
+          <property name="row-span">1</property>
+        </layout>
+      </object>
+    </child>
+
+    <child>
+      <object class="SmtkPressureArea" id="right_trigger">
+        <layout>
+          <property name="column">3</property>
+          <property name="column-span">1</property>
+          <property name="row">0</property>
+          <property name="row-span">1</property>
+        </layout>
+      </object>
+    </child>
+
+    <!-- D-Pad -->
+    <child>
+      <object class="GtkGrid">
+        <child>
+          <object class="SmtkButtonArea" id="dpad_up">
+            <layout>
+              <property name="column">1</property>
+              <property name="column-span">1</property>
+              <property name="row">0</property>
+              <property name="row-span">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="SmtkButtonArea" id="dpad_left">
+            <layout>
+              <property name="column">0</property>
+              <property name="column-span">1</property>
+              <property name="row">1</property>
+              <property name="row-span">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="SmtkButtonArea" id="dpad_right">
+            <layout>
+              <property name="column">2</property>
+              <property name="column-span">1</property>
+              <property name="row">1</property>
+              <property name="row-span">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="SmtkButtonArea" id="dpad_down">
+            <layout>
+              <property name="column">1</property>
+              <property name="column-span">1</property>
+              <property name="row">2</property>
+              <property name="row-span">1</property>
+            </layout>
+          </object>
+        </child>
+
+        <layout>
+          <property name="column">0</property>
+          <property name="column-span">1</property>
+          <property name="row">1</property>
+          <property name="row-span">1</property>
+        </layout>
+      </object>
+    </child>
+
+    <!-- Sticks -->
+    <child>
+      <object class="SmtkSundialArea" id="left_stick">
+        <layout>
+          <property name="column">1</property>
+          <property name="column-span">1</property>
+          <property name="row">1</property>
+          <property name="row-span">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="SmtkSundialArea" id="right_stick">
+        <layout>
+          <property name="column">2</property>
+          <property name="column-span">1</property>
+          <property name="row">1</property>
+          <property name="row-span">1</property>
+        </layout>
+      </object>
+    </child>
+
+    <!-- ABXY -->
+    <child>
+      <object class="GtkGrid">
+        <child>
+          <object class="SmtkButtonArea" id="button_y">
+            <layout>
+              <property name="column">1</property>
+              <property name="column-span">1</property>
+              <property name="row">0</property>
+              <property name="row-span">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="SmtkButtonArea" id="button_x">
+            <layout>
+              <property name="column">0</property>
+              <property name="column-span">1</property>
+              <property name="row">1</property>
+              <property name="row-span">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="SmtkButtonArea" id="button_b">
+            <layout>
+              <property name="column">2</property>
+              <property name="column-span">1</property>
+              <property name="row">1</property>
+              <property name="row-span">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="SmtkButtonArea" id="button_a">
+            <layout>
+              <property name="column">1</property>
+              <property name="column-span">1</property>
+              <property name="row">2</property>
+              <property name="row-span">1</property>
+            </layout>
+          </object>
+        </child>
+
+        <layout>
+          <property name="column">3</property>
+          <property name="column-span">1</property>
+          <property name="row">1</property>
+          <property name="row-span">1</property>
+        </layout>
+      </object>
+    </child>
+
+  </template>
+</interface>
+

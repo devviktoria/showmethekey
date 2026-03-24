@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "smtk-app.h"
+#include "smtk-types.h"
 #include "smtk-app-win.h"
 #include "smtk-keys-win.h"
 
@@ -173,6 +174,8 @@ static void activate(GApplication *app)
 	// Application is already single instance, and we use this to prevent
 	// mutliply windows.
 	SmtkApp *this = SMTK_APP(app);
+
+	smtk_register_types();
 
 	g_debug("Keys win: %s.", this->keys_win_opt ? "true" : "false");
 	g_debug("App win: %s.", this->app_win_opt ? "true" : "false");
