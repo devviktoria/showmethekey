@@ -138,6 +138,56 @@ static int print_button_event(struct libinput_event *event)
 	);
 }
 
+static int print_tablet_tool_axis_event(struct libinput_event *event)
+{
+	struct libinput_event_tablet_tool *tool =
+		libinput_event_get_tablet_tool_event(event);
+
+	bool pressure_changed =
+		libinput_event_tablet_tool_pressure_has_changed(tool);
+
+	bool tilt_x_changed =
+		libinput_event_tablet_tool_tilt_x_has_changed(tool);
+
+	bool tilt_y_changed =
+		libinput_event_tablet_tool_tilt_y_has_changed(tool);
+
+	//If there are no changes -> we write nothing
+	if (!pressure_changed && !tilt_x_changed && !tilt_y_changed)
+		return 0;
+
+	enum libinput_event_type event_type = libinput_event_get_type(event);
+	uint32_t time_stamp = libinput_event_tablet_tool_get_time(tool);
+	double pressure = -1.0;
+	double tilt_x = -1000.0;
+	double tilt_y = -1000.0;
+
+	if (pressure_changed)
+		pressure = libinput_event_tablet_tool_get_pressure(tool);
+
+	if (tilt_x_changed)
+		tilt_x = libinput_event_tablet_tool_get_tilt_x(tool);
+
+	if (tilt_y_changed)
+		tilt_y = libinput_event_tablet_tool_get_tilt_y(tool);
+
+	return printf(
+		"{"
+		"\"event_name\": \"TABLET_AXIS\", "
+		"\"event_type\": %d, "
+		"\"time_stamp\": %d, "
+		"\"pressure\": %.6f, "
+		"\"tilt_x\": %.6f, "
+		"\"tilt_y\": %.6f"
+		"}\n",
+		event_type,
+		time_stamp,
+		pressure,
+		tilt_x,
+		tilt_y
+	);
+}
+
 static int handle_events(struct libinput *libinput)
 {
 	int result = -1;
@@ -156,6 +206,9 @@ static int handle_events(struct libinput *libinput)
 		// Sorry, mouse button is also a key.
 		case LIBINPUT_EVENT_POINTER_BUTTON:
 			print_button_event(event);
+			break;
+		case LIBINPUT_EVENT_TABLET_TOOL_AXIS:
+			print_tablet_tool_axis_event(event);
 			break;
 		default:
 			break;
