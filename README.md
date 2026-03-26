@@ -1,8 +1,6 @@
-Show Me The Key
-===============
+# Show Me The Key
 
-Show keys you typed on screen.
-------------------------------
+## Show keys you typed on screen.
 
 [Project Website](https://showmethekey.alynx.one/)
 
@@ -123,7 +121,7 @@ for_window [app_id="showmethekey-gtk" title="Floating Window - Show Me The Key"]
 }
 ```
 
-For Hyprland, you can use window rules to achieve the same effect. The config should be at `~/.config/hypr/hyprland.conf` or an extension of it. 
+For Hyprland, you can use window rules to achieve the same effect. The config should be at `~/.config/hypr/hyprland.conf` or an extension of it.
 Example config:
 
 ```
@@ -173,105 +171,7 @@ If you changed translatable strings, don't forget to run `meson compile showmeth
 
 If you added new source files with translatable strings, don't forget to add it to `showmethekey-gtk/po/POTFILES.in` before running `meson compile showmethekey-update-po`. File paths in `POTFILES.in` should be relative to project directory.
 
-If you want to add languages, first add a country code in `showmethekey-gtk/po/LINGUAS`, then run `meson compile showmethekey-update-po`, you will get a new `.po` file with your added country code. If this language needs UTF-8 encoding, don't use words like `zh_CN.UTF-8` in `showmethekey-gtk/po/LINGUAS` or file name, because RPM's find\_lang script may ignore them sometimes, and you should change to `charset=UTF-8` manually in the header.
-
-# Developer Notes
-
-This section documents reproducible verification steps for contributors who
-touch `showmethekey-gtk/smtk-keys-win.c` or the surrounding build system.
-
-## Verifying the Build Stays Warning-Clean (`-Wdeprecated-declarations`)
-
-`smtk-keys-win.c` contains helper functions that call deprecated `gdk_x11_*`
-APIs inside `#ifdef GDK_WINDOWING_X11` blocks.  Each call site is wrapped in
-localized `#pragma GCC diagnostic push/pop` guards so the deprecation warnings
-are suppressed **only** for those lines; no project-wide suppression is used.
-
-To confirm that no `-Wdeprecated-declarations` warnings leak from
-`smtk-keys-win.c`, configure and compile with the warning promoted to an error
-for the entire GTK component:
-
-```bash
-# 1. Configure – enable the warning and treat it as an error.
-#    Use a throw-away build directory so your regular build is unaffected.
-meson setup \
-  -Dc_args='-Wdeprecated-declarations -Werror=deprecated-declarations' \
-  build_warn/ && \
-meson compile -C build_warn/ 2>&1 | grep 'smtk-keys-win'
-```
-
-A clean run produces **no output** from the `grep` filter.  Any line printed
-from `smtk-keys-win.c` that contains `error:` indicates a leaking deprecation
-warning and means the pragma guards need attention.
-
-> **Important:** the `-Werror=deprecated-declarations` flag here is scoped to
-> this verification build only via `-Dc_args`.  It must **not** be committed to
-> `meson.build` or `meson_options.txt` because doing so would add a
-> project-wide suppression or hard failure that affects unrelated code.
-
-## Verifying Non-X11 Builds Still Compile
-
-The X11-specific code in `smtk-keys-win.c` is wrapped in
-`#ifdef GDK_WINDOWING_X11 … #endif` guards.  When GTK4 is built without the
-X11 backend (e.g. a Wayland-only GTK4 such as on some minimal environments),
-`GDK_WINDOWING_X11` is not defined in `<gdk/gdkconfig.h>` and the entire block
-is excluded at compile time.
-
-To verify the guard is correct without needing a Wayland-only GTK4 installation,
-you can check the preprocessed output directly:
-
-```bash
-# Capture the compiler flags Meson uses for the file, then preprocess it
-# with GDK_WINDOWING_X11 forcibly undefined.
-#
-# Adjust include paths to match your system (pkg-config output below is one way).
-GTK_CFLAGS=$(pkg-config --cflags gtk4 libadwaita-1 glib-2.0 json-glib-1.0 \
-                                 gio-2.0 cairo pango xkbcommon xkbregistry)
-
-gcc -fsyntax-only \
-    -UGDK_WINDOWING_X11 \
-    $GTK_CFLAGS \
-    -I. \
-    showmethekey-gtk/smtk-keys-win.c
-```
-
-A successful exit code (0) means the file compiles cleanly without the X11
-backend.  No `gdk/x11/gdkx.h` header is included and none of the X11 helper
-functions are compiled, exactly as intended.
-
-## Observing X11 On-Map EWMH Messages (Regression Check)
-
-`smtk-keys-win.c` contains debug-level log lines immediately before every
-`_NET_WM_STATE` and `_NET_WM_DESKTOP` client message sent by the `on_map()`
-handler.  The lines are emitted via GLib's `g_debug()` and are therefore:
-
-- **silent by default** — GLib suppresses `G_LOG_LEVEL_DEBUG` unless the
-  `G_MESSAGES_DEBUG` environment variable is set.
-- **X11-only** — they live inside the `#ifdef GDK_WINDOWING_X11` /
-  `GDK_IS_X11_DISPLAY()` guard; Wayland sessions are unaffected.
-
-To observe the messages, launch the application under an X11 or XWayland
-session with debug logging enabled:
-
-```bash
-G_MESSAGES_DEBUG=all showmethekey-gtk 2>&1 | grep 'X11 on_map'
-```
-
-Expected output when the keys window is mapped under X11:
-
-```
-X11 on_map: sending _NET_WM_STATE remove _NET_WM_STATE_BELOW (always-on-top pre-clear)
-X11 on_map: sending _NET_WM_STATE add _NET_WM_STATE_ABOVE (always-on-top)
-X11 on_map: sending _NET_WM_STATE add _NET_WM_STATE_STICKY
-X11 on_map: sending _NET_WM_DESKTOP 0xffffffff (all-workspaces)
-```
-
-All four lines appearing confirms that both the `_NET_WM_STATE` and
-`_NET_WM_DESKTOP` client messages are being dispatched correctly on window map.
-If any line is absent after touching the `on_map()` path, the corresponding
-EWMH message send has been removed or bypassed and must be restored.
-
----
+If you want to add languages, first add a country code in `showmethekey-gtk/po/LINGUAS`, then run `meson compile showmethekey-update-po`, you will get a new `.po` file with your added country code. If this language needs UTF-8 encoding, don't use words like `zh_CN.UTF-8` in `showmethekey-gtk/po/LINGUAS` or file name, because RPM's find_lang script may ignore them sometimes, and you should change to `charset=UTF-8` manually in the header.
 
 # Name
 
