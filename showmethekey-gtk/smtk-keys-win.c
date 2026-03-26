@@ -179,6 +179,13 @@ static void gdk_x11_surface_wmspec_change_state(
 	const char *state
 )
 {
+	/* Interim workaround: suppress -Wdeprecated-declarations for gdk_x11_*
+	 * calls below. Localized intentionally — do not mute project-wide
+	 * warnings. Remove once upstream provides non-deprecated replacements. */
+#if defined(__clang__) || defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 	GdkDisplay *display = gdk_surface_get_display(surface);
 	Display *xdisplay = gdk_x11_display_get_xdisplay(display);
 	XClientMessageEvent xclient;
@@ -209,12 +216,22 @@ static void gdk_x11_surface_wmspec_change_state(
 		SubstructureRedirectMask | SubstructureNotifyMask,
 		(XEvent *)&xclient
 	);
+#if defined(__clang__) || defined(__GNUC__)
+#	pragma GCC diagnostic pop
+#endif
 }
 
 // See <https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/x11/gdkwindow-x11.c#L4122-4168>.
 static void
 gdk_x11_surface_wmspec_change_desktop(GdkSurface *surface, long desktop)
 {
+	/* Interim workaround: suppress -Wdeprecated-declarations for gdk_x11_*
+	 * calls below. Localized intentionally — do not mute project-wide
+	 * warnings. Remove once upstream provides non-deprecated replacements. */
+#if defined(__clang__) || defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 	GdkDisplay *display = gdk_surface_get_display(surface);
 	Display *xdisplay = gdk_x11_display_get_xdisplay(display);
 	XClientMessageEvent xclient;
@@ -241,6 +258,9 @@ gdk_x11_surface_wmspec_change_desktop(GdkSurface *surface, long desktop)
 		SubstructureRedirectMask | SubstructureNotifyMask,
 		(XEvent *)&xclient
 	);
+#if defined(__clang__) || defined(__GNUC__)
+#	pragma GCC diagnostic pop
+#endif
 }
 #endif
 
@@ -265,8 +285,17 @@ static void on_map(SmtkKeysWin *this, void *data)
 	// See <https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/x11/gdkwindow-x11.c#L4383-4407>.
 	//
 	// Need to remove _NET_WM_STATE_BELOW first.
+	// REGRESSION-CHECK: log confirms the _NET_WM_STATE path is reached on map.
+	g_debug(
+		"X11 on_map: sending _NET_WM_STATE remove _NET_WM_STATE_BELOW"
+		" (always-on-top pre-clear)"
+	);
 	gdk_x11_surface_wmspec_change_state(
 		surface, false, "_NET_WM_STATE_BELOW"
+	);
+	g_debug(
+		"X11 on_map: sending _NET_WM_STATE add _NET_WM_STATE_ABOVE"
+		" (always-on-top)"
 	);
 	gdk_x11_surface_wmspec_change_state(
 		surface, true, "_NET_WM_STATE_ABOVE"
@@ -277,6 +306,9 @@ static void on_map(SmtkKeysWin *this, void *data)
 	//
 	// _NET_WM_STATE_STICKY only means WM should keep the window's position
 	// fixed, even when scrolling virtual desktops.
+	g_debug(
+		"X11 on_map: sending _NET_WM_STATE add _NET_WM_STATE_STICKY"
+	);
 	gdk_x11_surface_wmspec_change_state(
 		surface, true, "_NET_WM_STATE_STICKY"
 	);
@@ -285,6 +317,10 @@ static void on_map(SmtkKeysWin *this, void *data)
 	// Setting desktop to 0xFFFFFFFF means shows on all desktops.
 	//
 	// See <https://specifications.freedesktop.org/wm-spec/wm-spec-1.4.html#idm45703946960064>.
+	// REGRESSION-CHECK: log confirms the _NET_WM_DESKTOP path is reached on map.
+	g_debug(
+		"X11 on_map: sending _NET_WM_DESKTOP 0xffffffff (all-workspaces)"
+	);
 	gdk_x11_surface_wmspec_change_desktop(surface, 0xFFFFFFFF);
 #endif
 }
