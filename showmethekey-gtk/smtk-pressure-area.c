@@ -34,7 +34,6 @@ draw(GtkDrawingArea *drawing_area,
 
 static void smtk_pressure_area_class_init(SmtkPressureAreaClass *klass)
 {
-	GObjectClass *o_class = G_OBJECT_CLASS(klass);
 }
 
 static void smtk_pressure_area_init(SmtkPressureArea *this)
