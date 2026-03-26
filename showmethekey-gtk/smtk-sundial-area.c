@@ -60,21 +60,21 @@ GtkWidget *smtk_sundial_area_new(void)
 }
 
 void smtk_sundial_area_set_vector(
-	SmtkSundialArea *area,
+	SmtkSundialArea *this,
 	const double x,
 	const double y,
 	const bool update_x,
 	const bool update_y
 )
 {
-	g_return_if_fail(SMTK_IS_SUNDIAL_AREA(area));
+	g_return_if_fail(SMTK_IS_SUNDIAL_AREA(this));
 	if (update_x) {
-		area->x = CLAMP(x, -1.0, 1.0);
+		this->x = CLAMP(x, -1.0, 1.0);
 	}
 	if (update_y) {
-		area->y = CLAMP(y, -1.0, 1.0);
+		this->y = CLAMP(y, -1.0, 1.0);
 	}
 
-	gtk_widget_queue_draw(GTK_WIDGET(area));
+	gtk_widget_queue_draw(GTK_WIDGET(this));
 }
 
