@@ -16,7 +16,7 @@ G_DECLARE_FINAL_TYPE(
 
 GtkWidget *smtk_sundial_area_new(void);
 void smtk_sundial_area_set_vector(
-	SmtkSundialArea *this,
+	SmtkSundialArea *area,
 	const double x,
 	const double y,
 	const bool update_x,
