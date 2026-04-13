@@ -30,6 +30,14 @@ window.smtk-keys-win headerbar windowhandle box windowtitle {
   padding: 10px;
   border: 2px solid #FFF;
   border-radius: 12px;
+  margin: 8px;
+}
+
+.pointer-frame {
+  padding: 2px;
+  border: 2px solid #FFF;
+  border-radius: 12px;
+  margin: 2px;
 }
 
 .debug-red {

@@ -20,6 +20,7 @@ struct _SmtkKeysWin {
 	GtkWidget *header_bar;
 	GtkWidget *handle;
 	GtkWidget *controller_widget;
+	GtkWidget *pointer_box;
 	GtkWidget *tablet_widget;
 	GtkWidget *mouse_area;
 	GtkWidget *area;
@@ -339,6 +340,19 @@ size_allocate(GtkWidget *widget, int width, int height, int baseline)
 
 	g_debug("Allocated size: %d×%d.", width, height);
 
+	if (this->pointer_box != NULL) {
+		const int pointer_width = MAX(1, width / 10);
+		int current_width = -1;
+		g_object_get(
+			this->pointer_box, "width-request", &current_width, NULL
+		);
+		if (current_width != pointer_width) {
+			gtk_widget_set_size_request(
+				this->pointer_box, pointer_width, -1
+			);
+		}
+	}
+
 	GtkNative *native = gtk_widget_get_native(widget);
 	if (native == NULL)
 		return;
@@ -434,11 +448,19 @@ static void constructed(GObject *o)
 	gtk_widget_add_css_class(this->controller_widget, "controller");
 	//gtk_widget_set_size_request(this->controller_widget, 400, 100);
 
+	this->pointer_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	gtk_widget_set_hexpand(this->pointer_box, FALSE);
+	GtkWidget *mouse_frame = gtk_frame_new(NULL);
+	gtk_box_append(GTK_BOX(content_box), this->pointer_box);
+
 	this->tablet_widget = smtk_tablet_widget_new();
-	gtk_box_append(GTK_BOX(content_box), this->tablet_widget);
+	gtk_widget_add_css_class(this->tablet_widget, "pointer-frame");
+	gtk_box_append(GTK_BOX(this->pointer_box), this->tablet_widget);
 
 	this->mouse_area = smtk_mouse_area_new();
-	gtk_box_append(GTK_BOX(content_box), this->mouse_area);
+	gtk_frame_set_child(GTK_FRAME(mouse_frame), this->mouse_area);
+	gtk_widget_add_css_class(mouse_frame, "pointer-frame");
+	gtk_box_append(GTK_BOX(this->pointer_box), mouse_frame);
 
 	this->area = smtk_keys_area_new();
 	gtk_box_append(GTK_BOX(content_box), this->area);
@@ -547,6 +569,7 @@ static void smtk_keys_win_init(SmtkKeysWin *this)
 
 	this->settings = NULL;
 	this->handle = NULL;
+	this->pointer_box = NULL;
 	this->emitter = NULL;
 	this->area = NULL;
 }
