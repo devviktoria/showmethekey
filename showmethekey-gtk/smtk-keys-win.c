@@ -8,7 +8,7 @@
 #include "smtk-keys-win.h"
 #include "smtk-keys-area.h"
 #include "smtk-mouse-area.h"
-#include "smtk-tablet-area.h"
+#include "smtk-tablet-widget.h"
 #include "smtk-controller-widget.h"
 #include "smtk-keys-emitter.h"
 #include "smtk-controller-emitter.h"
@@ -20,7 +20,7 @@ struct _SmtkKeysWin {
 	GtkWidget *header_bar;
 	GtkWidget *handle;
 	GtkWidget *controller_widget;
-	GtkWidget *tablet_area;
+	GtkWidget *tablet_widget;
 	GtkWidget *mouse_area;
 	GtkWidget *area;
 	SmtkKeysEmitter *emitter;
@@ -147,8 +147,8 @@ void on_tablet(
 {
 	if (this->paused)
 		return;
-	smtk_tablet_area_handle_event(
-		SMTK_TABLET_AREA(this->tablet_area), pressure, tilt_x, tilt_y
+	smtk_tablet_widget_handle_event(
+		SMTK_TABLET_WIDGET(this->tablet_widget), pressure, tilt_x, tilt_y
 	);
 }
 
@@ -434,8 +434,8 @@ static void constructed(GObject *o)
 	gtk_widget_add_css_class(this->controller_widget, "controller");
 	//gtk_widget_set_size_request(this->controller_widget, 400, 100);
 
-	this->tablet_area = smtk_tablet_area_new();
-	gtk_box_append(GTK_BOX(content_box), this->tablet_area);
+	this->tablet_widget = smtk_tablet_widget_new();
+	gtk_box_append(GTK_BOX(content_box), this->tablet_widget);
 
 	this->mouse_area = smtk_mouse_area_new();
 	gtk_box_append(GTK_BOX(content_box), this->mouse_area);

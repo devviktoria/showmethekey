@@ -1,11 +1,11 @@
 #include <gtk/gtk.h>
 
 #include "smtk-enum-types.h"
-#include "smtk-tablet-area.h"
+#include "smtk-tablet-widget.h"
 #include "smtk-sundial-area.h"
 #include "smtk-pressure-area.h"
 
-struct _SmtkTabletArea {
+struct _SmtkTabletWidget {
 	GtkFrame parent_instance;
 	GSettings *settings;
 
@@ -18,7 +18,7 @@ struct _SmtkTabletArea {
 	int timeout;
 };
 
-G_DEFINE_TYPE(SmtkTabletArea, smtk_tablet_area, GTK_TYPE_FRAME)
+G_DEFINE_TYPE(SmtkTabletWidget, smtk_tablet_widget, GTK_TYPE_FRAME)
 
 enum { PROP_0, PROP_DRAW_BORDER, PROP_MARGIN_RATIO, PROP_TIMEOUT, N_PROPS };
 
@@ -31,7 +31,7 @@ static void set_property(
 	GParamSpec *pspec
 )
 {
-	SmtkTabletArea *this = SMTK_TABLET_AREA(o);
+	SmtkTabletWidget *this = SMTK_TABLET_WIDGET(o);
 
 	switch (prop) {
 	case PROP_DRAW_BORDER:
@@ -57,7 +57,7 @@ static void set_property(
 static void
 get_property(GObject *o, unsigned int prop, GValue *value, GParamSpec *pspec)
 {
-	SmtkTabletArea *this = SMTK_TABLET_AREA(o);
+	SmtkTabletWidget *this = SMTK_TABLET_WIDGET(o);
 
 	switch (prop) {
 	case PROP_DRAW_BORDER:
@@ -85,7 +85,7 @@ static int trigger_redraw(void *data)
 
 static void constructed(GObject *o)
 {
-	SmtkTabletArea *this = SMTK_TABLET_AREA(o);
+	SmtkTabletWidget *this = SMTK_TABLET_WIDGET(o);
 
 	this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 	gtk_widget_set_margin_top(this->box, 6);
@@ -119,26 +119,26 @@ static void constructed(GObject *o)
 		this->settings, "timeout", this, "timeout", G_SETTINGS_BIND_GET
 	);
 
-	G_OBJECT_CLASS(smtk_tablet_area_parent_class)->constructed(o);
+	G_OBJECT_CLASS(smtk_tablet_widget_parent_class)->constructed(o);
 }
 
 static void dispose(GObject *o)
 {
-	SmtkTabletArea *this = SMTK_TABLET_AREA(o);
+	SmtkTabletWidget *this = SMTK_TABLET_WIDGET(o);
 
 	g_clear_object(&this->settings);
 
-	G_OBJECT_CLASS(smtk_tablet_area_parent_class)->dispose(o);
+	G_OBJECT_CLASS(smtk_tablet_widget_parent_class)->dispose(o);
 }
 
 static void finalize(GObject *o)
 {
-	SmtkTabletArea *this = SMTK_TABLET_AREA(o);
+	SmtkTabletWidget *this = SMTK_TABLET_WIDGET(o);
 
-	G_OBJECT_CLASS(smtk_tablet_area_parent_class)->finalize(o);
+	G_OBJECT_CLASS(smtk_tablet_widget_parent_class)->finalize(o);
 }
 
-static void smtk_tablet_area_class_init(SmtkTabletAreaClass *klass)
+static void smtk_tablet_widget_class_init(SmtkTabletWidgetClass *klass)
 {
 	GObjectClass *o_class = G_OBJECT_CLASS(klass);
 
@@ -179,21 +179,21 @@ static void smtk_tablet_area_class_init(SmtkTabletAreaClass *klass)
 	g_object_class_install_properties(o_class, N_PROPS, props);
 }
 
-static void smtk_tablet_area_init(SmtkTabletArea *this)
+static void smtk_tablet_widget_init(SmtkTabletWidget *this)
 {
 	this->settings = NULL;
 }
 
-GtkWidget *smtk_tablet_area_new(void)
+GtkWidget *smtk_tablet_widget_new(void)
 {
-	SmtkTabletArea *this = g_object_new(
-		SMTK_TYPE_TABLET_AREA, "vexpand", true, "hexpand", true, NULL
+	SmtkTabletWidget *this = g_object_new(
+		SMTK_TYPE_TABLET_WIDGET, "vexpand", true, "hexpand", true, NULL
 	);
 	return GTK_WIDGET(this);
 }
 
-void smtk_tablet_area_handle_event(
-	SmtkTabletArea *this,
+void smtk_tablet_widget_handle_event(
+	SmtkTabletWidget *this,
 	const double pressure,
 	const double tilt_x,
 	const double tilt_y
@@ -221,4 +221,3 @@ void smtk_tablet_area_handle_event(
 		);
 	}
 }
-
