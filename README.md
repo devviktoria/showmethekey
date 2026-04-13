@@ -1,8 +1,6 @@
-Show Me The Key
-===============
+# Show Me The Key
 
-Show keys you typed on screen.
-------------------------------
+## Show keys you typed on screen.
 
 [Project Website](https://showmethekey.alynx.one/)
 
@@ -123,7 +121,7 @@ for_window [app_id="showmethekey-gtk" title="Floating Window - Show Me The Key"]
 }
 ```
 
-For Hyprland, you can use window rules to achieve the same effect. The config should be at `~/.config/hypr/hyprland.conf` or an extension of it. 
+For Hyprland, you can use window rules to achieve the same effect. The config should be at `~/.config/hypr/hyprland.conf` or an extension of it.
 Example config:
 
 ```
@@ -173,7 +171,7 @@ If you changed translatable strings, don't forget to run `meson compile showmeth
 
 If you added new source files with translatable strings, don't forget to add it to `showmethekey-gtk/po/POTFILES.in` before running `meson compile showmethekey-update-po`. File paths in `POTFILES.in` should be relative to project directory.
 
-If you want to add languages, first add a country code in `showmethekey-gtk/po/LINGUAS`, then run `meson compile showmethekey-update-po`, you will get a new `.po` file with your added country code. If this language needs UTF-8 encoding, don't use words like `zh_CN.UTF-8` in `showmethekey-gtk/po/LINGUAS` or file name, because RPM's find\_lang script may ignore them sometimes, and you should change to `charset=UTF-8` manually in the header.
+If you want to add languages, first add a country code in `showmethekey-gtk/po/LINGUAS`, then run `meson compile showmethekey-update-po`, you will get a new `.po` file with your added country code. If this language needs UTF-8 encoding, don't use words like `zh_CN.UTF-8` in `showmethekey-gtk/po/LINGUAS` or file name, because RPM's find_lang script may ignore them sometimes, and you should change to `charset=UTF-8` manually in the header.
 
 # Name
 
